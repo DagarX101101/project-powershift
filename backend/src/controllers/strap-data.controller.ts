@@ -96,6 +96,7 @@ export class StrapDataController {
             data: dataToUpdate
           });
         }
+        await tx.calculationResult.deleteMany({});
       });
 
       dashboardService.invalidateCache();
@@ -187,6 +188,7 @@ export class StrapDataController {
             data: dataToUpdate
           });
         }
+        await tx.calculationResult.deleteMany({ where: { mineId } });
       });
 
       dashboardService.invalidateCache();
@@ -282,6 +284,9 @@ export class StrapDataController {
             data: dataToUpdate
           });
         }
+        const mines = await tx.mine.findMany({ where: { clusterId } });
+        const mineIds = mines.map(m => m.id);
+        await tx.calculationResult.deleteMany({ where: { mineId: { in: mineIds } } });
       });
 
       dashboardService.invalidateCache();

@@ -129,14 +129,11 @@ export const getResultsForMine = async (req: AuthenticatedRequest, res: Response
   const { mineId } = req.params;
 
   try {
-    const resultSet = await getPersistedResultsForMine(mineId);
+    let resultSet = await getPersistedResultsForMine(mineId);
 
     if (!resultSet) {
-      res.status(404).json(buildErrorResponse(
-        'NOT_FOUND',
-        `No calculation results found for mine ${mineId}. Run a calculation first using POST /api/calculation-engine/run.`
-      ));
-      return;
+      logger.info(`[CalculationController] No persisted results for mine ${mineId}. Calculating on-the-fly...`);
+      resultSet = await calculateForMine(mineId);
     }
 
     res.status(200).json({
@@ -153,7 +150,7 @@ export const getResultsForMine = async (req: AuthenticatedRequest, res: Response
 /**
  * GET /api/calculation-engine/:mineId/:financialYear
  * Returns latest persisted result for a specific mine + financial year.
- * Does NOT trigger a recalculation.
+ * Runs calculation dynamically if missing.
  */
 export const getResultForMineAndYear = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const start = Date.now();
@@ -169,14 +166,11 @@ export const getResultForMineAndYear = async (req: AuthenticatedRequest, res: Re
   }
 
   try {
-    const result = await getPersistedResult(mineId, fy);
+    let result = await getPersistedResult(mineId, fy);
 
     if (!result) {
-      res.status(404).json(buildErrorResponse(
-        'NOT_FOUND',
-        `No calculation result found for mine ${mineId} and financial year ${fy}. Run a calculation first.`
-      ));
-      return;
+      logger.info(`[CalculationController] No persisted result for mine ${mineId} and year ${fy}. Calculating on-the-fly...`);
+      result = await calculateForMineAndYear(mineId, fy);
     }
 
     res.status(200).json({
