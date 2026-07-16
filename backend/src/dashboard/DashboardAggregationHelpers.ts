@@ -88,7 +88,9 @@ export function aggregateDashboardData(
     let vehiclesDeployable = 0;
     let totalRequiredPower = 0;
 
-    activeFys.forEach(fy => {
+    const aggregationYears = filters.financialYear === 'all' ? ['fy31'] : [filters.financialYear.toLowerCase()];
+
+    aggregationYears.forEach(fy => {
       const res = calcMap.get(`${mineId}_${fy}`);
       if (res) {
         totalEVFleet += res.vehicle?.totalEVFleet ?? 0;
