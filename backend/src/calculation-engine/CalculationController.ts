@@ -131,8 +131,8 @@ export const getResultsForMine = async (req: AuthenticatedRequest, res: Response
   try {
     let resultSet = await getPersistedResultsForMine(mineId);
 
-    if (!resultSet) {
-      logger.info(`[CalculationController] No persisted results for mine ${mineId}. Calculating on-the-fly...`);
+    if (!resultSet || !resultSet.years || Object.keys(resultSet.years).length < 5) {
+      logger.info(`[CalculationController] Persisted results incomplete or missing for mine ${mineId}. Running calculations on-the-fly...`);
       resultSet = await calculateForMine(mineId);
     }
 
