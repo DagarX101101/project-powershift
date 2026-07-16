@@ -4,9 +4,6 @@ import { profileService } from '../services/profile';
 import type { ProfileData } from '../services/profile';
 import { Camera, Save, Lock, Trash2, CheckCircle2, XCircle, Shield, User, MapPin, Key, Clock, Settings, Loader2 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const SERVER_URL = API_URL.replace('/api', ''); // http://localhost:5000
-
 export const Profile: React.FC = () => {
   const { user: authUser, logout } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
