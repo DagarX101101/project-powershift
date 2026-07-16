@@ -1,0 +1,22 @@
+[
+  {
+    "clusterName": "Surguja Cluster",
+    "mines": ["PEKB", "PCB", "Kente"]
+  },
+  {
+    "clusterName": "Tamnar Cluster",
+    "mines": ["GP II", "GP III", "Pelma"]
+  },
+  {
+    "clusterName": "Singrauli Cluster",
+    "mines": ["Dhirauli", "Suliyari"]
+  },
+  {
+    "clusterName": "Odisha Cluster",
+    "mines": ["Bijahan"]
+  },
+  {
+    "clusterName": "Jharkhand Cluster",
+    "mines": ["Gondulpura", "Jitpur"]
+  }
+]

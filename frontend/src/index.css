@@ -1,0 +1,276 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Backgrounds: Neutral, layered, no harsh glare */
+    --bg-app: #f8fafc; /* Soft slate neutral bg */
+    --bg-card: #ffffff; /* Clean white elevated cards */
+    --bg-card-hover: #f1f5f9; /* Soft card hover slate */
+    
+    /* Text: High Contrast, excellent readability (WCAG AA) */
+    --text-primary: #0f172a; /* Slate-900: very high contrast dark neutral */
+    --text-secondary: #334155; /* Slate-700: clear read secondary text */
+    --text-muted: #627d98; /* Muted Slate: readable labels and headers */
+    
+    /* Accents: Professional High Contrast Blue Palette */
+    --accent-color: #2563eb; /* Blue-600: strong accent anchor */
+    --accent-hover: #1d4ed8; /* Blue-700 */
+    --accent-light: #eff6ff; /* Blue-50 bg */
+    --accent-text: #1d4ed8;
+    
+    /* Borders */
+    --border-color: #cbd5e1; /* Slate-300: solid visible border */
+    
+    /* Semantic Colors */
+    --success-color: #16a34a; /* Green-600 */
+    --success-light: #f0fdf4; /* Green-50 */
+    --success-text: #15803d; /* Green-700 */
+    
+    --warning-color: #ca8a04; /* Yellow-600 */
+    --warning-light: #fef9c3; /* Yellow-100 */
+    --warning-text: #854d0e; /* Yellow-800 */
+    
+    --danger-color: #dc2626; /* Red-600 */
+    --danger-light: #fef2f2; /* Red-50 */
+    --danger-text: #b91c1c; /* Red-700 */
+    
+    /* Layout & Components specific */
+    --sidebar-bg: #0f172a; /* Keep dark sidebar for premium layout contrast */
+    --sidebar-text: #f8fafc;
+    --sidebar-border: #1e293b;
+    --header-bg: #ffffff;
+  }
+
+  .dark {
+    --bg-app: #030712;
+    --bg-card: #0b0f19;
+    --bg-card-hover: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --border-color: #1f2937;
+    --accent-color: #3b82f6; /* Modern Blue */
+    --accent-hover: #60a5fa;
+    --accent-light: #1e3a8a;
+    --accent-text: #60a5fa;
+    --success-color: #10b981;
+    --success-light: #064e3b;
+    --success-text: #34d399;
+    --warning-color: #f59e0b;
+    --warning-light: #78350f;
+    --warning-text: #fbbf24;
+    --danger-color: #ef4444;
+    --danger-light: #7f1d1d;
+    --danger-text: #fca5a5;
+    --sidebar-bg: #0b0f19;
+    --sidebar-text: #f9fafb;
+    --sidebar-border: #1f2937;
+    --header-bg: #0b0f19;
+  }
+
+  .corporate {
+    --bg-app: #081325;
+    --bg-card: #0f2038;
+    --bg-card-hover: #1e3a5f;
+    --text-primary: #f0f9ff;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #1c355e;
+    --accent-color: #0ea5e9;
+    --accent-hover: #38bdf8;
+    --accent-light: #0c4a6e;
+    --accent-text: #38bdf8;
+    --success-color: #0d9488;
+    --success-light: #115e59;
+    --success-text: #2dd4bf;
+    --warning-color: #f59e0b;
+    --warning-light: #78350f;
+    --warning-text: #fbbf24;
+    --danger-color: #e11d48;
+    --danger-light: #881337;
+    --danger-text: #fda4af;
+    --sidebar-bg: #091325;
+    --sidebar-text: #f0f9ff;
+    --sidebar-border: #1c355e;
+    --header-bg: #0f2038;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    @apply transition-colors duration-200;
+  }
+}
+
+/* Custom class bindings for CSS variables */
+.theme-bg {
+  background-color: var(--bg-app);
+}
+
+.theme-card {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--text-muted);
+}
+
+.theme-border {
+  border-color: var(--border-color);
+}
+
+.theme-accent-btn {
+  background-color: var(--accent-color);
+  color: #ffffff; /* High contrast button text */
+}
+
+.theme-accent-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.theme-accent-text {
+  color: var(--accent-text);
+}
+
+/* Semantic Badges / Alerts classes */
+.theme-success-bg {
+  background-color: var(--success-light);
+  border-color: var(--success-color);
+}
+.theme-success-text {
+  color: var(--success-text);
+}
+
+.theme-warning-bg {
+  background-color: var(--warning-light);
+  border-color: var(--warning-color);
+}
+.theme-warning-text {
+  color: var(--warning-text);
+}
+
+.theme-danger-bg {
+  background-color: var(--danger-light);
+  border-color: var(--danger-color);
+}
+.theme-danger-text {
+  color: var(--danger-text);
+}
+
+/* ─── Print Styles ──────────────────────────────────────────────────────── */
+@media print {
+  /* Hide sidebars, navigation headers, search, and action triggers */
+  aside,
+  header,
+  footer,
+  button,
+  select,
+  input,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset flex layout structure and height constraints for printing */
+  html, body, #root, main, .flex, .min-h-screen, .flex-1, .app-container {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  /* Enforce black text color on white page regardless of active theme */
+  *,
+  .theme-text-primary,
+  .theme-text-secondary,
+  .text-slate-900,
+  .text-white,
+  .text-slate-100,
+  .text-slate-300,
+  span,
+  p,
+  h1,
+  h2,
+  h3,
+  td,
+  th {
+    color: #000000 !important;
+    background-color: transparent !important;
+    background: transparent !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Show print-only elements */
+  .hidden.print\:block,
+  .hidden.print\:flex {
+    display: block !important;
+  }
+  .hidden.print\:flex {
+    display: flex !important;
+  }
+
+  /* Clean up margins */
+  .max-w-7xl {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure tables don't break across pages mid-row */
+  tr {
+    page-break-inside: avoid !important;
+  }
+
+  /* Table styling for print clarity */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  td, th {
+    border-bottom: 1px solid #cbd5e1 !important;
+    color: #000000 !important;
+  }
+
+  /* Page margins and layout sizes */
+  @page {
+    margin: 15mm 15mm;
+    size: A4 portrait;
+  }
+
+  @page landscape {
+    size: A4 landscape;
+  }
+
+  /* Print footer with page numbers and trailing label */
+  body::after {
+    content: "Project PowerShift | Confidential";
+    display: block;
+    text-align: center;
+    font-size: 8pt;
+    color: #475569;
+    margin-top: 25px;
+    border-top: 1px solid #cbd5e1;
+    padding-top: 8px;
+  }
+}

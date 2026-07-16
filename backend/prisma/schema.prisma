@@ -1,0 +1,204 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  ENGINEER
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model AccessRequest {
+  id             String              @id @default(uuid())
+  fullName       String              @map("full_name")
+  email          String              @unique
+  department     String?
+  mobileNumber   String?             @map("mobile_number")
+  reason         String?
+  rejectionReason String?            @map("rejection_reason")
+  passwordHash   String              @map("password_hash")
+  status         AccessRequestStatus @default(PENDING)
+  requestedAt    DateTime            @default(now()) @map("requested_at")
+  reviewedAt     DateTime?           @map("reviewed_at")
+  reviewedBy     String?             @map("reviewed_by")
+  assignedRole   Role?               @map("assigned_role")
+  assignedMines  String[]            @map("assigned_mines")
+
+  @@map("access_requests")
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  name               String
+  department         String?
+  mobileNumber       String?        @map("mobile_number")
+  passwordHash       String
+  role               Role           @default(VIEWER)
+  status             UserStatus     @default(ACTIVE)
+  mustChangePassword Boolean        @default(true) @map("must_change_password")
+  profilePhoto       String?        @map("profile_photo")
+  themePreference    String         @default("dark") @map("theme_preference")
+  lastLoginAt        DateTime?      @map("last_login_at")
+  approvedBy         String?        @map("approved_by")
+  approvedAt         DateTime?      @map("approved_at")
+  refreshTokens      RefreshToken[]
+  mines              Mine[]         @relation("UserMines")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model Cluster {
+  id            String          @id @default(uuid())
+  name          String          @unique
+  mines         Mine[]
+  electricalTods ElectricalTOD[]
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  @@map("clusters")
+}
+
+model Mine {
+  id             String              @id @default(uuid())
+  name           String              @unique
+  clusterId      String              @map("cluster_id")
+  cluster        Cluster             @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  users          User[]              @relation("UserMines")
+  planningInputs MinePlanningInput[]
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  @@map("mines")
+}
+
+model FinancialYear {
+  id        String   @id @default(uuid())
+  yearCode  String   @unique @map("year_code")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("financial_years")
+}
+
+model VehicleProductivity {
+  id         String   @id @default(uuid())
+  equipment  String   @unique
+  particular String
+  capacity   String
+  uom        String
+  avgLead    Float    @map("avg_lead")
+  fy27       Float
+  fy28       Float
+  fy29       Float
+  fy30       Float
+  fy31       Float
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("vehicle_productivities")
+}
+
+model MinePlanningInput {
+  id         String   @id @default(uuid())
+  mineId     String   @map("mine_id")
+  mine       Mine     @relation(fields: [mineId], references: [id], onDelete: Cascade)
+  particular String
+  uom        String
+  fy27       Float
+  fy28       Float
+  fy29       Float
+  fy30       Float
+  fy31       Float
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([mineId, particular])
+  @@map("mine_planning_inputs")
+}
+
+model ElectricalTOD {
+  id                         String   @id @default(uuid())
+  clusterId                  String   @map("cluster_id")
+  cluster                    Cluster  @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  period                     String
+  fromTime                   String   @map("from_time")
+  toTime                     String   @map("to_time")
+  totalHours                 Float    @map("total_hours")
+  consumptionPercentage      Float    @default(0) @map("consumption_percentage")
+  percentageDifferenceFactor Float    @default(0) @map("percentage_difference_factor")
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
+
+  @@unique([clusterId, period])
+  @@map("electrical_tods")
+}
+
+model CalculationResult {
+  id            String   @id @default(uuid())
+  mineId        String   @map("mine_id")
+  financialYear String   @map("financial_year")
+  results       Json
+  calculatedAt  DateTime @map("calculated_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([mineId, financialYear])
+  @@index([mineId])
+  @@map("calculation_results")
+}
+
+model AuditLog {
+  id              String   @id @default(uuid())
+  adminId         String   @map("admin_id")
+  adminName       String   @map("admin_name")
+  action          String
+  targetUserId    String?  @map("target_user_id")
+  targetUserEmail String?  @map("target_user_email")
+  oldValue        String?  @map("old_value")
+  newValue        String?  @map("new_value")
+  timestamp       DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model ReportHistory {
+  id           String   @id @default(uuid())
+  generatedBy  String   @map("generated_by")
+  generatorName String  @map("generator_name")
+  reportType   String   @map("report_type")
+  mineFilter   String   @default("all") @map("mine_filter")
+  fyFilter     String   @default("all") @map("fy_filter")
+  exportFormat String   @map("export_format")
+  generatedAt  DateTime @default(now()) @map("generated_at")
+
+  @@map("report_history")
+}
