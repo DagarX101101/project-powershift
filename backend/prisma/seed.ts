@@ -131,8 +131,77 @@ async function main() {
         },
       });
 
+      const MINE_PLANNING_INPUTS: Record<string, { particular: string; uom: string; fy27: number; fy28: number; fy29: number; fy30: number; fy31: number; }[]> = {
+        'PEKB': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 18.00, fy28: 18.00, fy29: 18.00, fy30: 18.00, fy31: 18.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 74.70, fy28: 84.96, fy29: 92.70, fy30: 98.28, fy31: 103.14 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 12.00, fy28: 12.00, fy29: 12.00, fy30: 12.00, fy31: 12.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 33.00, fy28: 33.00, fy29: 33.00, fy30: 33.00, fy31: 33.00 },
+        ],
+        'PCB': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 5.00, fy28: 5.00, fy29: 5.00, fy30: 5.00, fy31: 5.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 13.62, fy28: 9.08, fy29: 10.98, fy30: 14.07, fy31: 14.51 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 7.00, fy28: 7.00, fy29: 7.00, fy30: 7.00, fy31: 7.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 6.00, fy28: 6.00, fy29: 6.00, fy30: 6.00, fy31: 6.00 },
+        ],
+        'Kente': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 0.05, fy28: 5.00, fy29: 9.00, fy30: 9.00, fy31: 9.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 2.40, fy28: 14.55, fy29: 20.00, fy30: 30.82, fy31: 30.25 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 15.00, fy28: 15.00, fy29: 15.00, fy30: 15.00, fy31: 15.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 12.00, fy28: 12.00, fy29: 12.00, fy30: 12.00, fy31: 12.00 },
+        ],
+        'GP II': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 1.00, fy28: 5.00, fy29: 12.00, fy30: 20.00, fy31: 23.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 11.39, fy28: 22.11, fy29: 52.15, fy30: 71.87, fy31: 78.89 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 6.00, fy28: 6.00, fy29: 6.00, fy30: 6.00, fy31: 6.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 22.00, fy28: 22.00, fy29: 22.00, fy30: 22.00, fy31: 22.00 },
+        ],
+        'GP III': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 5.00, fy28: 8.00, fy29: 8.00, fy30: 8.00, fy31: 8.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 13.40, fy28: 16.81, fy29: 17.04, fy30: 17.25, fy31: 17.40 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 1.00, fy28: 1.00, fy29: 1.00, fy30: 1.00, fy31: 1.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 6.00, fy28: 6.00, fy29: 6.00, fy30: 6.00, fy31: 6.00 },
+        ],
+        'Pelma': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 0.00, fy28: 2.50, fy29: 7.00, fy30: 12.00, fy31: 15.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 0.10, fy28: 12.50, fy29: 28.00, fy30: 43.20, fy31: 56.00 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 6.00, fy28: 6.00, fy29: 6.00, fy30: 6.00, fy31: 6.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 21.00, fy28: 21.00, fy29: 21.00, fy30: 21.00, fy31: 21.00 },
+        ],
+        'Singrauli': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 5.00, fy28: 5.00, fy29: 5.00, fy30: 5.00, fy31: 5.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 37.20, fy28: 31.92, fy29: 33.10, fy30: 33.04, fy31: 34.87 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 2.00, fy28: 2.00, fy29: 2.00, fy30: 2.00, fy31: 2.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 12.00, fy28: 12.00, fy29: 12.00, fy30: 12.00, fy31: 12.00 },
+        ],
+        'Dhirauli': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 2.08, fy28: 5.00, fy29: 5.00, fy30: 5.00, fy31: 5.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 19.92, fy28: 35.81, fy29: 36.70, fy30: 36.70, fy31: 35.90 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 1.00, fy28: 1.00, fy29: 1.00, fy30: 1.00, fy31: 1.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 12.00, fy28: 12.00, fy29: 12.00, fy30: 12.00, fy31: 12.00 },
+        ],
+        'Jitpur': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 1.25, fy28: 2.50, fy29: 3.00, fy30: 3.50, fy31: 4.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 5.82, fy28: 7.48, fy29: 9.24, fy30: 11.32, fy31: 13.32 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 1.00, fy28: 1.00, fy29: 1.00, fy30: 1.00, fy31: 1.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 6.00, fy28: 6.00, fy29: 6.00, fy30: 6.00, fy31: 6.00 },
+        ],
+        'Gondulpura': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 0.00, fy28: 2.00, fy29: 4.00, fy30: 5.00, fy31: 5.00 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 0.33, fy28: 3.94, fy29: 7.88, fy30: 8.88, fy31: 7.79 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 1.00, fy28: 1.00, fy29: 1.00, fy30: 1.00, fy31: 1.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 4.00, fy28: 4.00, fy29: 4.00, fy30: 4.00, fy31: 4.00 },
+        ],
+        'Bijahan': [
+          { particular: 'Coal Production', uom: 'MT', fy27: 1.50, fy28: 5.20, fy29: 6.30, fy30: 7.30, fy31: 7.30 },
+          { particular: 'OB Production', uom: 'Mcum', fy27: 6.03, fy28: 15.99, fy29: 16.13, fy30: 16.97, fy31: 16.41 },
+          { particular: 'CHP, Washery & Mining Requirement', uom: 'MVA', fy27: 1.00, fy28: 1.00, fy29: 1.00, fy30: 1.00, fy31: 1.00 },
+          { particular: 'Total Available Power for EV', uom: 'MVA', fy27: 8.00, fy28: 8.00, fy29: 8.00, fy30: 8.00, fy31: 8.00 },
+        ],
+      };
+
       // Seed default inputs for each mine
-      const mineInputs = [
+      const mineInputs = MINE_PLANNING_INPUTS[mineName] || [
         {
           particular: 'Coal Production',
           uom: 'MT',
