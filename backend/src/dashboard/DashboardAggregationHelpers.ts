@@ -1,4 +1,5 @@
 import hierarchy from '../../../shared/mineHierarchy.json';
+import { FINANCIAL_YEAR_KEYS } from '../calculation-engine/FormulaConstants';
 
 export interface DashboardFilters {
   mineId: string;
@@ -61,15 +62,31 @@ export interface DashboardSummaryResponse {
   };
 }
 
+
+/**
+ * Resolves the financial years to aggregate.
+ * If "all" is selected, dynamically returns only the latest configured year.
+ * If a specific year is selected, returns that year.
+ */
+export function resolveDashboardYears(financialYearFilter: string): string[] {
+  const years = [...FINANCIAL_YEAR_KEYS];
+  if (financialYearFilter === 'all') {
+    // Dynamically retrieve the latest configured financial year
+    const latestYear = years[years.length - 1];
+    return [latestYear];
+  }
+  return [financialYearFilter.toLowerCase()];
+}
+
 export function aggregateDashboardData(
   dbClusters: any[],
   dbCalcResults: any[],
   planningInputsCounts: Record<string, number>,
   filters: DashboardFilters
 ): DashboardSummaryResponse {
-  // 1. Resolve active financial years to aggregate
+  // 1. Resolve active financial years to aggregate for status/completeness checks
   const activeFys = filters.financialYear === 'all'
-    ? ['fy27', 'fy28', 'fy29', 'fy30', 'fy31']
+    ? [...FINANCIAL_YEAR_KEYS]
     : [filters.financialYear.toLowerCase()];
 
   // Create a fast lookup for calculation results by mineId + financialYear
@@ -88,7 +105,7 @@ export function aggregateDashboardData(
     let vehiclesDeployable = 0;
     let totalRequiredPower = 0;
 
-    const aggregationYears = filters.financialYear === 'all' ? ['fy31'] : [filters.financialYear.toLowerCase()];
+    const aggregationYears = resolveDashboardYears(filters.financialYear);
 
     aggregationYears.forEach(fy => {
       const res = calcMap.get(`${mineId}_${fy}`);
