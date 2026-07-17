@@ -1,18 +1,9 @@
 import { dashboardRepository } from './DashboardRepository';
 import { aggregateDashboardData, DashboardFilters, DashboardSummaryResponse } from './DashboardAggregationHelpers';
 
-const cache = new Map<string, DashboardSummaryResponse>();
-
 export class DashboardService {
   async getDashboardSummary(mineId: string = 'all', financialYear: string = 'all'): Promise<DashboardSummaryResponse> {
-    const cacheKey = `${mineId}_${financialYear}`;
-    
-    if (cache.has(cacheKey)) {
-      console.log(`[DashboardService] Cache HIT for key: ${cacheKey}`);
-      return cache.get(cacheKey)!;
-    }
-
-    console.log(`[DashboardService] Cache MISS for key: ${cacheKey}. Fetching data...`);
+    console.log(`[DashboardService] Fetching dashboard summary for mineId=${mineId}, financialYear=${financialYear}...`);
 
     const [dbClusters, dbCalcResults, inputsCount] = await Promise.all([
       dashboardRepository.getClustersAndMines(),
@@ -21,15 +12,11 @@ export class DashboardService {
     ]);
 
     const filters: DashboardFilters = { mineId, financialYear };
-    const summary = aggregateDashboardData(dbClusters, dbCalcResults, inputsCount, filters);
-
-    cache.set(cacheKey, summary);
-    return summary;
+    return aggregateDashboardData(dbClusters, dbCalcResults, inputsCount, filters);
   }
 
   invalidateCache(): void {
-    console.log('[DashboardService] Cache invalidated and cleared');
-    cache.clear();
+    console.log('[DashboardService] Cache invalidation triggered (no-op now)');
   }
 }
 
