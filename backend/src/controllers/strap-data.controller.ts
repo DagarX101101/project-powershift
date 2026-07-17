@@ -5,6 +5,7 @@ import { Role } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 import { dashboardService } from '../dashboard/DashboardService';
+import { calculateForMine } from '../calculation-engine/CalculationService';
 
 const hierarchyPath = path.resolve(__dirname, '../../../shared/mineHierarchy.json');
 const hierarchy = JSON.parse(fs.readFileSync(hierarchyPath, 'utf8'));
@@ -99,6 +100,16 @@ export class StrapDataController {
         await tx.calculationResult.deleteMany({});
       });
 
+      // Recalculate calculations for all mines immediately to refresh the database cache
+      try {
+        const mines = await prisma.mine.findMany();
+        for (const m of mines) {
+          await calculateForMine(m.id);
+        }
+      } catch (calcError) {
+        console.error('[StrapDataController.updateVehicleProductivity] Recalculation failed:', calcError);
+      }
+
       dashboardService.invalidateCache();
 
       res.status(200).json({ message: 'Vehicle productivity updated successfully' });
@@ -190,6 +201,13 @@ export class StrapDataController {
         }
         await tx.calculationResult.deleteMany({ where: { mineId } });
       });
+
+      // Recalculate calculations for this specific mine immediately
+      try {
+        await calculateForMine(mineId);
+      } catch (calcError) {
+        console.error('[StrapDataController.updateMinePlanningInputs] Recalculation failed:', calcError);
+      }
 
       dashboardService.invalidateCache();
 
@@ -288,6 +306,16 @@ export class StrapDataController {
         const mineIds = mines.map(m => m.id);
         await tx.calculationResult.deleteMany({ where: { mineId: { in: mineIds } } });
       });
+
+      // Recalculate calculations for all mines in this cluster immediately to refresh the database cache
+      try {
+        const mines = await prisma.mine.findMany({ where: { clusterId } });
+        for (const m of mines) {
+          await calculateForMine(m.id);
+        }
+      } catch (calcError) {
+        console.error('[StrapDataController.updateElectricalTod] Recalculation failed:', calcError);
+      }
 
       dashboardService.invalidateCache();
 
