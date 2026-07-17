@@ -602,10 +602,10 @@ export const MasterSheet: React.FC = () => {
                             {activeColumns.map((col) => {
                               const resultObject = resultData?.[col] ?? null;
                               const val = resolveValue(resultObject, row.path);
-                              const isIntegerUnit = row.unit === 'Nos.';
+                              const isRawInput = row.unit === 'MT' || row.unit === 'Mcum';
                               return (
                                 <td key={col} className="px-4 py-3 text-right tabular-nums theme-text-primary">
-                                  {isIntegerUnit ? fmtInt(val) : fmt(val)}
+                                  {isRawInput ? fmt(val) : fmtInt(val !== null ? Math.ceil(val) : null)}
                                 </td>
                               );
                             })}
@@ -644,10 +644,10 @@ export const MasterSheet: React.FC = () => {
                           {activeColumns.map((col) => {
                             const resultObject = resultData?.[col] ?? null;
                             const val = resolveValue(resultObject, row.path);
-                            const isIntegerUnit = row.unit === 'Nos.';
+                            const isRawInput = row.unit === 'MT' || row.unit === 'Mcum';
                             return (
                               <td key={col} className="px-4 py-3 text-right tabular-nums theme-text-primary">
-                                {isIntegerUnit ? fmtInt(val) : fmt(val)}
+                                {isRawInput ? fmt(val) : fmtInt(val !== null ? Math.ceil(val) : null)}
                               </td>
                             );
                           })}
