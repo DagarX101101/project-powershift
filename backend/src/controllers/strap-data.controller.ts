@@ -244,8 +244,8 @@ export class StrapDataController {
 
       const totalPercentage = Array.from(updatedMap.values()).reduce((sum, val) => sum + val, 0);
       
-      // Allow minor float differences e.g. 99.99 to 100.01 but check exact 100% representation
-      if (Math.abs(totalPercentage - 100.0) > 0.001) {
+      // Allow minor float differences and profiles with sums up to 101% (e.g. Jharkhand)
+      if (Math.abs(totalPercentage - 100.0) > 1.01) {
         res.status(400).json({ error: `Save rejected: Total consumption percentage must be exactly 100%. Currently it is ${totalPercentage}%.` });
         return;
       }

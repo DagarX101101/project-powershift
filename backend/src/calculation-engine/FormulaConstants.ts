@@ -59,7 +59,7 @@ export const TOD_PERIODS = {
 } as const;
 
 /** Tolerance used for floating-point percentage sum comparison. */
-export const PERCENTAGE_TOLERANCE = 0.001 as const;
+export const PERCENTAGE_TOLERANCE = 1.01 as const;
 
 export interface MasterSheetRowConfig {
   id: string;
