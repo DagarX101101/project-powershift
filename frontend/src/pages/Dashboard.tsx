@@ -170,6 +170,8 @@ export const Dashboard: React.FC = () => {
     }));
   };
 
+  const allMines = clusters.flatMap((c) => c.mines);
+
   // Helper formatting routines
   const fmtVal = (v: number | undefined, isInteger = false) => {
     if (v === undefined || v === null || isNaN(v)) return '—';
