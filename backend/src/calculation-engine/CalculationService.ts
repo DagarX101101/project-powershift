@@ -19,6 +19,10 @@
 import { prisma } from '../config/database';
 import logger from '../utils/logger';
 import { runCalculation, CalculationEngineError } from './CalculationEngine';
+import { runVehicleCalculations } from './VehicleCalculations';
+import { runPowerCalculations } from './PowerCalculations';
+import { runConsumptionCalculations } from './ConsumptionCalculations';
+import { validateInputBundle } from './CalculationValidation';
 import { dashboardService } from '../dashboard/DashboardService';
 import {
   CalculationInputBundle,
@@ -163,7 +167,6 @@ export async function calculateForMineAndYear(
   // Check if a valid cache entry exists
   const cached = resultCache.get(key);
   if (cached) {
-    // Load the mine to get clusterId for the freshness check
     const mine = await prisma.mine.findUnique({ where: { id: mineId } });
     if (mine) {
       const maxStrapUpdatedAt = await getStrapDataMaxUpdatedAt(mineId, mine.clusterId);
@@ -177,43 +180,19 @@ export async function calculateForMineAndYear(
     }
   }
 
-  // Build input bundle from database
-  const bundle = await loadInputBundle(mineId, fy);
-  if (!bundle) {
-    throw new Error(`Required Strap Data not found for mineId=${mineId}, financialYear=${fy}`);
+  // Calculate all years progressively to ensure monotonic vehicle requirements
+  const resultSet = await calculateForMine(mineId);
+  const result = resultSet.years[fy];
+  if (!result) {
+    throw new Error(`Failed to calculate progressive results for mineId=${mineId}, financialYear=${fy}`);
   }
-
-  // Run calculation engine
-  const result = runCalculation(bundle);
-
-  // Persist result in DB
-  await prisma.calculationResult.upsert({
-    where: { mineId_financialYear: { mineId, financialYear: fy } },
-    update: {
-      results: result as any,
-      calculatedAt: new Date(result.calculatedAt),
-    },
-    create: {
-      mineId,
-      financialYear: fy,
-      results: result as any,
-      calculatedAt: new Date(result.calculatedAt),
-    },
-  });
-
-  // Store in cache
-  resultCache.set(key, result);
-  logger.info(`[CalculationService] Calculated and cached ${mineId}:${fy}`);
-
-  // Invalidate dashboard summary cache
-  dashboardService.invalidateCache();
-
   return result;
 }
 
 /**
  * Calculates all financial years for a single mine.
- * Only recalculates years where Strap Data is newer than the cached result.
+ * Computes raw vehicle metrics, applies monotonic non-decreasing bounds,
+ * and updates dependent power and consumption outputs.
  */
 export async function calculateForMine(mineId: string): Promise<MineCalculationResultSet> {
   const mine = await prisma.mine.findUnique({ where: { id: mineId } });
@@ -221,41 +200,104 @@ export async function calculateForMine(mineId: string): Promise<MineCalculationR
     throw new Error(`Mine not found: ${mineId}`);
   }
 
-  const results: Partial<Record<FinancialYearKey, CalculationResult>> = {};
-  const errors: { fy: string; error: string }[] = [];
-
-  // Run calculations for all years — year failures are isolated, not global
-  await Promise.allSettled(
-    FINANCIAL_YEAR_KEYS.map(async (fy) => {
-      try {
-        results[fy] = await calculateForMineAndYear(mineId, fy);
-      } catch (err: any) {
-        const msg = err instanceof CalculationEngineError
-          ? `Validation: ${err.validationErrors.join('; ')}`
-          : err.message;
-        errors.push({ fy, error: msg });
-        logger.warn(`[CalculationService] Failed to calculate ${mineId}:${fy} — ${msg}`);
-      }
-    })
-  );
-
-  if (errors.length > 0) {
-    logger.warn(`[CalculationService] ${errors.length} year(s) failed for mine ${mineId}`);
+  // 1. Load input bundles for all years
+  const bundles: Record<FinancialYearKey, CalculationInputBundle> = {} as any;
+  for (const fy of FINANCIAL_YEAR_KEYS) {
+    const bundle = await loadInputBundle(mineId, fy);
+    if (!bundle) {
+      throw new Error(`Required Strap Data not found for mineId=${mineId}, financialYear=${fy}`);
+    }
+    // Validate bundle inputs
+    const validation = validateInputBundle(bundle);
+    if (!validation.valid) {
+      throw new CalculationEngineError(
+        `Calculation rejected for ${fy}: ${validation.errors.length} validation error(s).`,
+        validation.errors
+      );
+    }
+    bundles[fy] = bundle;
   }
 
-  const calculatedYears = Object.values(results).filter(Boolean) as CalculationResult[];
-  const lastCalculatedAt = calculatedYears.length > 0
-    ? calculatedYears.reduce((latest, r) =>
-        new Date(r.calculatedAt) > new Date(latest) ? r.calculatedAt : latest,
-        calculatedYears[0].calculatedAt
-      )
-    : new Date().toISOString();
+  // 2. Calculate raw vehicle requirements first
+  const rawVehicles: Record<FinancialYearKey, { felEV: number; coalDumperEV: number; obDumperEV: number; }> = {} as any;
+  for (const fy of FINANCIAL_YEAR_KEYS) {
+    rawVehicles[fy] = runVehicleCalculations(bundles[fy]);
+  }
+
+  // 3. Apply progressive running maximum constraint across financial years
+  const progressiveVehicles: Record<FinancialYearKey, { felEV: number; coalDumperEV: number; obDumperEV: number; totalEVFleet: number; }> = {} as any;
+  let lastFel = 0;
+  let lastCoal = 0;
+  let lastOb = 0;
+
+  for (const fy of FINANCIAL_YEAR_KEYS) {
+    const currentRaw = rawVehicles[fy];
+    const fel = Math.max(lastFel, currentRaw.felEV);
+    const coal = Math.max(lastCoal, currentRaw.coalDumperEV);
+    const ob = Math.max(lastOb, currentRaw.obDumperEV);
+
+    progressiveVehicles[fy] = {
+      felEV: fel,
+      coalDumperEV: coal,
+      obDumperEV: ob,
+      totalEVFleet: fel + coal + ob
+    };
+
+    lastFel = fel;
+    lastCoal = coal;
+    lastOb = ob;
+  }
+
+  const results: Record<FinancialYearKey, CalculationResult> = {} as any;
+  const calculatedAt = new Date().toISOString();
+
+  // 4. Run the rest of the formulas for each year using progressive counts
+  for (const fy of FINANCIAL_YEAR_KEYS) {
+    const bundle = bundles[fy];
+    const vehicle = progressiveVehicles[fy];
+    const power = runPowerCalculations(bundle, vehicle.totalEVFleet);
+    const consumption = runConsumptionCalculations(bundle, power.availableEVPower, power.chpRequirement);
+
+    const result: CalculationResult = {
+      mineId: bundle.mineId,
+      mineName: bundle.mineName,
+      financialYear: fy,
+      calculatedAt,
+      vehicle,
+      power,
+      consumption
+    };
+
+    results[fy] = result;
+
+    // Persist result in DB
+    await prisma.calculationResult.upsert({
+      where: { mineId_financialYear: { mineId, financialYear: fy } },
+      update: {
+        results: result as any,
+        calculatedAt: new Date(calculatedAt),
+      },
+      create: {
+        mineId,
+        financialYear: fy,
+        results: result as any,
+        calculatedAt: new Date(calculatedAt),
+      },
+    });
+
+    // Store in cache
+    const key = cacheKey(mineId, fy);
+    resultCache.set(key, result);
+  }
+
+  // Invalidate dashboard summary cache
+  dashboardService.invalidateCache();
 
   return {
     mineId,
     mineName: mine.name,
     years: results,
-    lastCalculatedAt,
+    lastCalculatedAt: calculatedAt,
   };
 }
 
