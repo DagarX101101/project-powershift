@@ -293,8 +293,8 @@ export const StrapData: React.FC = () => {
     
     // 1. Vehicle productivity validation
     for (const row of vehicleProductivity) {
-      if (row.avgLead <= 0 || row.fy27 <= 0 || row.fy28 <= 0 || row.fy29 <= 0 || row.fy30 <= 0 || row.fy31 <= 0) {
-        setErrorMsg('Validation failed: Vehicle Productivity values must be positive numbers');
+      if (row.avgLead < 0 || row.fy27 < 0 || row.fy28 < 0 || row.fy29 < 0 || row.fy30 < 0 || row.fy31 < 0) {
+        setErrorMsg('Validation failed: Vehicle Productivity values must be non-negative numbers');
         return;
       }
     }
