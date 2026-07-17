@@ -48,7 +48,7 @@ export const PARTICULARS = {
 export const EQUIPMENT_IDENTIFIERS = {
   FEL: 'FEL EV',
   COAL_DUMPER: 'Coal Dumper EV',
-  OB_DUMPER: 'OB Dumper EV',
+  OB_DUMPER: 'OB EV Dumper',
 } as const;
 
 /** TOD period names as stored in the database. Must match seed data exactly. */

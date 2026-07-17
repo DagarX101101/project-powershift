@@ -212,6 +212,42 @@ async function main() {
   // 4. Seed Vehicle Productivity values
   const productivities = [
     {
+      equipment: 'Surface Miner',
+      particular: 'Coal',
+      capacity: '',
+      uom: 'MT/Year',
+      avgLead: 0.0,
+      fy27: 3.0,
+      fy28: 3.0,
+      fy29: 3.0,
+      fy30: 3.0,
+      fy31: 3.0,
+    },
+    {
+      equipment: 'FEL to Surface Miner Ratio',
+      particular: 'Coal',
+      capacity: '',
+      uom: 'Nos.',
+      avgLead: 0.0,
+      fy27: 2.0,
+      fy28: 2.0,
+      fy29: 2.0,
+      fy30: 2.0,
+      fy31: 2.0,
+    },
+    {
+      equipment: 'FEL - EV % Addition',
+      particular: 'Coal',
+      capacity: '7T',
+      uom: '%',
+      avgLead: 0.0,
+      fy27: 20.0,
+      fy28: 20.0,
+      fy29: 20.0,
+      fy30: 20.0,
+      fy31: 20.0,
+    },
+    {
       equipment: '1 FEL EV Productivity',
       particular: 'Coal',
       capacity: '7T',
@@ -222,6 +258,30 @@ async function main() {
       fy29: 1.42,
       fy30: 1.42,
       fy31: 1.42,
+    },
+    {
+      equipment: 'Coal Dumper to Surface Miner Ratio',
+      particular: 'Coal',
+      capacity: '40T',
+      uom: 'Nos.',
+      avgLead: 0.0,
+      fy27: 10.0,
+      fy28: 10.0,
+      fy29: 10.0,
+      fy30: 10.0,
+      fy31: 10.0,
+    },
+    {
+      equipment: 'Coal Dumper - EV % Addition',
+      particular: 'Coal',
+      capacity: '40T',
+      uom: '%',
+      avgLead: 0.0,
+      fy27: 0.0,
+      fy28: 0.0,
+      fy29: 0.0,
+      fy30: 0.0,
+      fy31: 0.0,
     },
     {
       equipment: '1 Coal Dumper EV Productivity',
@@ -236,7 +296,7 @@ async function main() {
       fy31: 0.42,
     },
     {
-      equipment: '1 OB Dumper EV Productivity',
+      equipment: '1 OB EV Dumper Productivity - 40T',
       particular: 'OB',
       capacity: '40T',
       uom: 'Mcum/Year',
@@ -247,13 +307,67 @@ async function main() {
       fy30: 0.24,
       fy31: 0.24,
     },
+    {
+      equipment: '1 OB EV Dumper Productivity - 70T',
+      particular: 'OB',
+      capacity: '70T',
+      uom: 'Mcum/Year',
+      avgLead: 3.0,
+      fy27: 0.291,
+      fy28: 0.291,
+      fy29: 0.291,
+      fy30: 0.291,
+      fy31: 0.291,
+    },
+    {
+      equipment: 'EV Deployment at Operational Sites',
+      particular: 'Deployment',
+      capacity: '',
+      uom: '%',
+      avgLead: 0.0,
+      fy27: 100.0,
+      fy28: 100.0,
+      fy29: 100.0,
+      fy30: 100.0,
+      fy31: 100.0,
+    },
+    {
+      equipment: 'EV Deployment at Upcoming Sites',
+      particular: 'Deployment',
+      capacity: '',
+      uom: '%',
+      avgLead: 0.0,
+      fy27: 100.0,
+      fy28: 100.0,
+      fy29: 100.0,
+      fy30: 100.0,
+      fy31: 100.0,
+    },
   ];
+
+  console.log('Cleaning up obsolete Vehicle Productivities...');
+  const activeProductivityNames = productivities.map(p => p.equipment);
+  await prisma.vehicleProductivity.deleteMany({
+    where: {
+      equipment: { notIn: activeProductivityNames },
+    },
+  });
 
   console.log('Seeding Vehicle Productivities...');
   for (const prod of productivities) {
     await prisma.vehicleProductivity.upsert({
       where: { equipment: prod.equipment },
-      update: {},
+      update: {
+        particular: prod.particular,
+        capacity: prod.capacity,
+        uom: prod.uom,
+        avgLead: prod.avgLead,
+        fy27: prod.fy27,
+        fy28: prod.fy28,
+        fy29: prod.fy29,
+        fy30: prod.fy30,
+        fy31: prod.fy31,
+      },
       create: {
         equipment: prod.equipment,
         particular: prod.particular,
