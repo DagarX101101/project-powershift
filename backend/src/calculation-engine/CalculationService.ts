@@ -37,20 +37,6 @@ import {
   TOD_PERIODS,
 } from './FormulaConstants';
 
-// ---------------------------------------------------------------------------
-// In-memory result cache
-// Key: `${mineId}:${financialYear}`
-// Value: CalculationResult with a calculatedAt timestamp
-// ---------------------------------------------------------------------------
-const resultCache = new Map<string, CalculationResult>();
-
-function cacheKey(mineId: string, fy: FinancialYearKey): string {
-  return `${mineId}:${fy}`;
-}
-
-function invalidateCache(mineId: string, fy: FinancialYearKey): void {
-  resultCache.delete(cacheKey(mineId, fy));
-}
 
 // ---------------------------------------------------------------------------
 // Strap Data loader
@@ -162,21 +148,21 @@ export async function calculateForMineAndYear(
   mineId: string,
   fy: FinancialYearKey
 ): Promise<CalculationResult> {
-  const key = cacheKey(mineId, fy);
+  // 1. Check if a valid database record cache exists
+  const record = await prisma.calculationResult.findUnique({
+    where: { mineId_financialYear: { mineId, financialYear: fy } },
+  });
 
-  // Check if a valid cache entry exists
-  const cached = resultCache.get(key);
-  if (cached) {
+  if (record) {
     const mine = await prisma.mine.findUnique({ where: { id: mineId } });
     if (mine) {
       const maxStrapUpdatedAt = await getStrapDataMaxUpdatedAt(mineId, mine.clusterId);
-      const cachedAt = new Date(cached.calculatedAt);
-      if (maxStrapUpdatedAt <= cachedAt) {
-        logger.info(`[CalculationService] Cache HIT for ${mineId}:${fy}`);
-        return cached;
+      const calculatedAt = new Date(record.calculatedAt);
+      if (maxStrapUpdatedAt <= calculatedAt) {
+        logger.info(`[CalculationService] Database cache HIT for ${mineId}:${fy}`);
+        return record.results as unknown as CalculationResult;
       }
-      logger.info(`[CalculationService] Cache STALE for ${mineId}:${fy} — recalculating`);
-      invalidateCache(mineId, fy);
+      logger.info(`[CalculationService] Database cache STALE for ${mineId}:${fy} — recalculating`);
     }
   }
 
@@ -285,9 +271,7 @@ export async function calculateForMine(mineId: string): Promise<MineCalculationR
       },
     });
 
-    // Store in cache
-    const key = cacheKey(mineId, fy);
-    resultCache.set(key, result);
+
   }
 
   // Invalidate dashboard summary cache
