@@ -106,7 +106,7 @@ export const Dashboard: React.FC = () => {
   // Filter States
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [selectedMineId, setSelectedMineId] = useState<string>('all');
-  const [selectedFY, setSelectedFY] = useState<string>('all');
+  const [selectedFY, setSelectedFY] = useState<string>('fy27');
 
   // UI / Fetching States
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
@@ -124,6 +124,10 @@ export const Dashboard: React.FC = () => {
       try {
         const clusterData = await fetchClustersAndMines();
         setClusters(clusterData);
+        const pekb = clusterData.flatMap(c => c.mines).find(m => m.name === 'PEKB');
+        if (pekb) {
+          setSelectedMineId(pekb.id);
+        }
       } catch (err: any) {
         console.error('Failed to load clusters list:', err);
         setError('Connection failed. Server offline or unreachable.');

@@ -124,6 +124,7 @@ export const StrapData: React.FC = () => {
       }
       setSelectedMineId(pekbId);
       setSelectedClusterId(pekbClusterId);
+      setSelectedTodClusterId(pekbClusterId);
     } catch (err: any) {
       console.error('Error in initial load:', err);
       setErrorMsg(err.response?.data?.error || 'Failed to connect to backend strap data APIs');
